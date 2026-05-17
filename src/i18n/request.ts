@@ -1,5 +1,2 @@
-import { getRequestConfig } from "next-intl/server";
-
-export default getRequestConfig(async () => {
-  return { locale: "id", messages: {} };
-});
+// i18n config — not in use yet
+export {};

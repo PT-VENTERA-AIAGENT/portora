@@ -1,10 +1,8 @@
-import Navbar from "@/components/Navbar";
 import Link from "next/link";
 
 export default function ForTalentPage() {
   return (
-    <div className="min-h-screen font-sans antialiased" style={{ backgroundColor: "#FAFAF7", color: "#0A0E1A" }}>
-      <Navbar />
+    <>
       <section className="px-6 pt-20 pb-16">
         <div className="max-w-[1280px] mx-auto">
           <div className="max-w-2xl">
@@ -45,6 +43,6 @@ export default function ForTalentPage() {
           </Link>
         </div>
       </section>
-    </div>
+    </>
   );
 }

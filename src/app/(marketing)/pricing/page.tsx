@@ -1,4 +1,3 @@
-import Navbar from "@/components/Navbar";
 import Link from "next/link";
 
 export default function PricingPage() {
@@ -36,8 +35,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen font-sans antialiased" style={{ backgroundColor: "#FAFAF7", color: "#0A0E1A" }}>
-      <Navbar />
+    <>
       <section className="px-6 pt-16 pb-8 text-center">
         <div className="max-w-[1280px] mx-auto">
           <h1 className="font-display text-5xl tracking-tight mb-4">Harga yang transparan</h1>
@@ -79,6 +77,6 @@ export default function PricingPage() {
           ))}
         </div>
       </section>
-    </div>
+    </>
   );
 }
