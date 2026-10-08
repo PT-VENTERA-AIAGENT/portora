@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { homePathFor, safeNext } from '@/lib/portora/format'
+import { authErrorMessage } from '@/lib/portora/auth-errors'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,23 +20,25 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError(authError.message)
+      setError(authErrorMessage(authError.message))
       setLoading(false)
       return
     }
 
-    router.push('/discover')
+    const next = safeNext(new URLSearchParams(window.location.search).get('next'))
+    router.push(next ?? homePathFor(data.user?.user_metadata?.role))
     router.refresh()
   }
 
   async function handleGoogle() {
     const supabase = createClient()
+    const next = safeNext(new URLSearchParams(window.location.search).get('next'))
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}` },
     })
   }
 
@@ -94,7 +98,10 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#0A0E1A' }}>Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium" style={{ color: '#0A0E1A' }}>Password</label>
+                <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: '#1A365D' }}>Lupa password?</Link>
+              </div>
               <input
                 type="password"
                 value={password}

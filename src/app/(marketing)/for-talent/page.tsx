@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const metadata = { title: 'Untuk talent creative' }
+
 export default function ForTalentPage() {
   return (
     <>
@@ -9,7 +11,7 @@ export default function ForTalentPage() {
             <span className="text-xs font-mono uppercase tracking-wider mb-4 block" style={{ color: "#0D9488" }}>For Talent</span>
             <h1 className="font-display text-5xl tracking-tight mb-6">Pajang karya. Ditemukan recruiter.</h1>
             <p className="text-lg mb-8 leading-relaxed" style={{ color: "#6B7280" }}>Buat public profile yang recruiter-ready dalam 10 menit. Upload portfolio, tambah skills, dan mulai ditemukan oleh ratusan perusahaan Indonesia. Gratis.</p>
-            <Link href="/onboarding" className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: "#0D9488" }}>
+            <Link href="/register?role=talent" className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: "#0D9488" }}>
               Buat profile sekarang — Gratis
             </Link>
           </div>
@@ -38,7 +40,7 @@ export default function ForTalentPage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-4xl mb-4">Mulai dalam 10 menit</h2>
           <p className="mb-8" style={{ color: "rgba(255,255,255,0.8)" }}>Isi profile, upload portfolio, dan langsung bisa ditemukan recruiter. 100% gratis untuk talent.</p>
-          <Link href="/onboarding" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: "#FFFFFF", color: "#0D9488" }}>
+          <Link href="/register?role=talent" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: "#FFFFFF", color: "#0D9488" }}>
             Daftar gratis sekarang
           </Link>
         </div>

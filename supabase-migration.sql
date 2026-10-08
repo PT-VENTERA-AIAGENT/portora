@@ -1,3 +1,6 @@
+-- DIGANTIKAN oleh supabase/migrations/0003_portora_core.sql (berisi tabel di bawah + fitur inti).
+-- File ini disimpan sebagai riwayat; jangan dijalankan lagi.
+
 -- Portora talent public profiles
 CREATE TABLE IF NOT EXISTS portora_talent_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

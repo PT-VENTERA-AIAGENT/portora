@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -32,7 +33,7 @@ export default function HomePage() {
               Platform discovery portfolio-first untuk recruiter yang mencari designer, editor, dan content creative — didukung AI summary dan fit scoring terstruktur.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-3 mb-4">
-              <Link href="/discover" className="inline-flex items-center justify-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: "#1A365D" }}>
+              <Link href="/register?role=recruiter" className="inline-flex items-center justify-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: "#1A365D" }}>
                 Mulai trial 14 hari gratis
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M6 12h14"/>
@@ -119,31 +120,13 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-4xl mb-4">Siap menemukan talent terbaik?</h2>
           <p className="mb-8" style={{ color: "rgba(255,255,255,0.7)" }}>Mulai trial gratis 14 hari. Tidak perlu kartu kredit.</p>
-          <Link href="/discover" className="inline-flex items-center gap-2 text-navy px-6 py-3 rounded-lg text-sm font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: "#FFFFFF", color: "#1A365D" }}>
+          <Link href="/register?role=recruiter" className="inline-flex items-center gap-2 text-navy px-6 py-3 rounded-lg text-sm font-semibold transition-colors hover:opacity-90" style={{ backgroundColor: "#FFFFFF", color: "#1A365D" }}>
             Mulai sekarang gratis
           </Link>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t px-6 py-8" style={{ borderColor: "#E5E7EB" }}>
-        <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm" style={{ color: "#6B7280" }}>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: "#1A365D" }}>
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>
-              </svg>
-            </div>
-            <span className="font-medium" style={{ color: "#0A0E1A" }}>Portora.id</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link href="/for-recruiters" className="hover:opacity-80 transition-colors">For Recruiters</Link>
-            <Link href="/for-talent" className="hover:opacity-80 transition-colors">For Talent</Link>
-            <Link href="/pricing" className="hover:opacity-80 transition-colors">Pricing</Link>
-          </div>
-          <p className="font-mono text-xs">© 2025 Portora.id by TalentRank</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

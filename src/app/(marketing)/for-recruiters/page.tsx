@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { submitRecruiterLead } from '@/lib/supabase/portora'
+import { submitDemoRequest } from '@/app/actions/submit-lead'
 
 export default function ForRecruitersPage() {
   return (
@@ -14,7 +14,7 @@ export default function ForRecruitersPage() {
             <p className="text-lg mb-8 leading-relaxed" style={{ color: '#6B7280' }}>
               Portora.id memberi recruiter satu tempat untuk search, screen, dan shortlist designer, editor, dan content creative terbaik Indonesia.
             </p>
-            <Link href="/discover" className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: '#1A365D' }}>
+            <Link href="/register?role=recruiter" className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors hover:opacity-90" style={{ backgroundColor: '#1A365D' }}>
               Coba gratis 14 hari
             </Link>
           </div>
@@ -58,16 +58,17 @@ function RecruiterLeadForm() {
     setLoading(true)
     setError(null)
     const fd = new FormData(e.currentTarget)
-    const { error } = await submitRecruiterLead({
+    const result = await submitDemoRequest({
       name: fd.get('name') as string,
       company: fd.get('company') as string,
       email: fd.get('email') as string,
       whatsapp: fd.get('whatsapp') as string,
       message: fd.get('message') as string,
+      website: fd.get('website') as string,
     })
     setLoading(false)
-    if (error) {
-      setError('Terjadi kesalahan. Coba lagi atau hubungi kami via WhatsApp.')
+    if (!result.success) {
+      setError(result.error ?? 'Terjadi kesalahan. Coba lagi atau hubungi kami via WhatsApp.')
     } else {
       setSubmitted(true)
     }
@@ -86,7 +87,8 @@ function RecruiterLeadForm() {
   )
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 relative">
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] w-px h-px opacity-0" />
       {error && (
         <div className="rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: '#DC2626' }}>
           {error}
