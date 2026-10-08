@@ -23,8 +23,8 @@ npm install
 cp .env.local.example .env.local
 
 # 3. (Option A) Run against hosted Supabase
-#    Create project at https://app.supabase.com, paste URL + anon key into .env.local
-#    Then apply migration:
+#    Create a NEW dedicated project at https://app.supabase.com, paste URL + anon key into .env.local
+#    Then apply migrations (dedicated project only — for the shared TalentRank project use the SQL editor):
 npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push
 
@@ -41,15 +41,18 @@ npm run dev
 # → http://localhost:3000
 ```
 
-> ⚠️ **Shared Supabase project.** Portora shares a Supabase project with TalentRank, so every Portora table is prefixed `portora_`.
-> Do **not** run `supabase/migrations/001_portora_schema.sql` on the shared project: it creates a generic `public.profiles`
-> table and replaces the `on_auth_user_created` trigger on `auth.users`, which can collide with TalentRank. The app code
-> only uses the `portora_*` tables from `0003_portora_core.sql`.
+> ⚠️ **Shared Supabase project.** Portora shares a Supabase project with TalentRank, so Portora tables are prefixed
+> `portora_` (exception: `blog_posts` from `0002`; if TalentRank ever has its own `blog_posts`, `create table if not exists`
+> silently reuses it). On the shared project apply migrations with the SQL editor, not `supabase db push`.
+> `supabase/legacy/001_portora_schema.sql` is kept for history only: it creates a generic `public.profiles` table and
+> replaces the `on_auth_user_created` trigger on `auth.users`, which can break TalentRank signups. The app only uses
+> the `portora_*` tables from `0003_portora_core.sql`.
 
 ## Go-live checklist
 
 **Database (Supabase project owner)**
-- [ ] Run `supabase/migrations/0003_portora_core.sql` on the production project (SQL editor or `supabase db push`). Do **not** run `001_portora_schema.sql` on the shared TalentRank project.
+- [ ] Run `supabase/migrations/0003_portora_core.sql` on the production project **via the SQL editor** (apply `0002_blog_and_leads.sql` first if it is not there yet). Do **not** use `supabase db push` on the shared TalentRank project: its migration history belongs to TalentRank.
+- [ ] Never run `supabase/legacy/001_portora_schema.sql` there (it replaces `handle_new_user` / `on_auth_user_created` on `auth.users`).
 - [ ] Add at least one admin: `insert into portora_admins (user_id) select id from auth.users where email = '...';`
 
 **Supabase Auth settings**
@@ -206,9 +209,9 @@ npm run dev                    # Next.js dev server with Turbopack
 npm run typecheck              # Validate TypeScript
 
 # Database
-npm run db:types               # Regenerate Supabase TypeScript types
+npm run db:types               # Generate DB types into database.types.ts (app code uses hand-written types.ts)
 npm run db:reset               # Reset local DB + reapply migrations
-npm run db:push                # Push migrations to remote Supabase
+npm run db:push                # Push migrations — dedicated Supabase project only, never the shared TalentRank one
 
 # Build
 npm run build                  # Production build

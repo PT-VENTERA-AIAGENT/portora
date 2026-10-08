@@ -2,7 +2,8 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Notifikasi email via Resend (opsional). Tanpa RESEND_API_KEY / EMAIL_FROM, email dilewati.
-const API_URL = process.env.EMAIL_API_URL ?? 'https://api.resend.com'
+const LOCAL_OVERRIDE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+const API_URL = LOCAL_OVERRIDE.test(process.env.EMAIL_API_URL ?? '') ? process.env.EMAIL_API_URL! : 'https://api.resend.com'
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export function emailEnabled() {

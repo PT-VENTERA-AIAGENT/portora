@@ -1,3 +1,9 @@
+-- LEGACY — JANGAN DIJALANKAN di project Supabase bersama TalentRank.
+-- Membuat public.profiles dan mengganti public.handle_new_user() + trigger on_auth_user_created
+-- di auth.users, yang bisa merusak signup TalentRank. Aplikasi memakai tabel portora_* dari
+-- supabase/migrations/0003_portora_core.sql. File dipindah dari supabase/migrations/ agar tidak
+-- ikut dijalankan `supabase db push`.
+
 -- profiles: extends auth.users
 create table if not exists public.profiles (
   id uuid references auth.users(id) on delete cascade primary key,

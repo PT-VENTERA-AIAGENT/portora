@@ -389,8 +389,13 @@ create policy "portora logs admin" on portora_moderation_logs for all
 -- =====================================================================
 -- Leads: admin boleh membaca
 -- =====================================================================
-drop policy if exists "portora admin read leads" on portora_leads;
-create policy "portora admin read leads" on portora_leads for select using (portora_is_admin());
+-- portora_leads berasal dari 0002; lewati bila 0002 belum diterapkan.
+do $$ begin
+  if to_regclass('public.portora_leads') is not null then
+    drop policy if exists "portora admin read leads" on portora_leads;
+    create policy "portora admin read leads" on portora_leads for select using (portora_is_admin());
+  end if;
+end $$;
 drop policy if exists "Anyone can insert leads" on portora_recruiter_leads;
 create policy "Anyone can insert leads" on portora_recruiter_leads for insert with check (true);
 drop policy if exists "portora admin read recruiter leads" on portora_recruiter_leads;
