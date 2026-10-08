@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { authErrorMessage } from '@/lib/portora/auth-errors'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -13,6 +14,13 @@ export default function RegisterPage() {
   const [role, setRole] = useState<'talent' | 'recruiter' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [checkEmail, setCheckEmail] = useState(false)
+
+  // /register?role=talent|recruiter dari CTA landing & pricing
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get('role')
+    if (preset === 'talent' || preset === 'recruiter') setRole(preset)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -21,22 +29,43 @@ export default function RegisterPage() {
     setError('')
 
     const supabase = createClient()
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName, role },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
 
     if (authError) {
-      setError(authError.message)
+      setError(authErrorMessage(authError.message))
       setLoading(false)
       return
     }
 
-    router.push('/onboarding')
+    // Project dengan konfirmasi email aktif tidak langsung memberi sesi.
+    if (!data.session) {
+      setCheckEmail(true)
+      setLoading(false)
+      return
+    }
+
+    router.push(role === 'talent' ? '/onboarding' : '/company')
     router.refresh()
+  }
+
+  if (checkEmail) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4 py-10" style={{ backgroundColor: '#FAFAF7' }}>
+        <div className="w-full max-w-sm border rounded-2xl p-8 text-center" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}>
+          <h1 className="text-2xl font-display font-semibold tracking-tight mb-2" style={{ color: '#0A0E1A' }}>Cek email kamu</h1>
+          <p className="text-sm" style={{ color: '#6B7280' }}>
+            Kami mengirim link konfirmasi ke <span className="font-medium" style={{ color: '#0A0E1A' }}>{email}</span>. Klik link itu untuk melanjutkan.
+          </p>
+        </div>
+      </main>
+    )
   }
 
   async function handleGoogle() {
@@ -161,6 +190,10 @@ export default function RegisterPage() {
             >
               {loading ? 'Loading...' : 'Daftar sekarang'}
             </button>
+            <p className="text-[11px] text-center" style={{ color: '#6B7280' }}>
+              Dengan mendaftar, kamu menyetujui <Link href="/terms" className="hover:underline" style={{ color: '#1A365D' }}>Syarat Layanan</Link> dan{' '}
+              <Link href="/privacy" className="hover:underline" style={{ color: '#1A365D' }}>Kebijakan Privasi</Link> Portora.id.
+            </p>
           </form>
         </div>
 

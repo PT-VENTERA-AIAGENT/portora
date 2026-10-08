@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getAllBlogPosts } from '@/lib/blog';
 
 export const metadata: Metadata = {
-  title: 'Blog Creative Hiring | Portora.id — Tips Rekrutmen Designer & Video Editor',
+  title: { absolute: 'Blog Creative Hiring | Portora.id — Tips Rekrutmen Designer & Video Editor' },
   description: 'Artikel tentang cara rekrut graphic designer, video editor, dan content creative Indonesia. Tips portfolio-first hiring, AI fit scoring, dan talent discovery.',
   keywords: ['blog creative hiring', 'rekrut designer', 'hire video editor', 'tips hr indonesia', 'portora blog'],
   openGraph: {

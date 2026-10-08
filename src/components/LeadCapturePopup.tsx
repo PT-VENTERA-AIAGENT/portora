@@ -11,7 +11,7 @@ const DELAY_MS = 25000;
 export default function LeadCapturePopup() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', whatsapp: '', role: 'recruiter' as const });
+  const [form, setForm] = useState<{ name: string; email: string; whatsapp: string; role: 'recruiter' | 'talent' }>({ name: '', email: '', whatsapp: '', role: 'recruiter' });
 
   const trigger = useCallback(() => {
     if (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) return;
@@ -35,6 +35,7 @@ export default function LeadCapturePopup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) return;
+    const website = String(new FormData(e.currentTarget as HTMLFormElement).get('website') ?? '');
     setSubmitting(true);
     const result = await submitLead({
       name: form.name,
@@ -43,6 +44,7 @@ export default function LeadCapturePopup() {
       role: form.role,
       source: 'popup',
       page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      website,
     });
     setSubmitting(false);
     if (result.success) {
@@ -74,7 +76,8 @@ export default function LeadCapturePopup() {
             </Dialog.Description>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-3 relative">
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] w-px h-px opacity-0" />
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#374151' }}>Nama lengkap *</label>
               <input

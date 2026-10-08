@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getBlogPost(slug);
   if (!post) return {};
   return {
-    title: post.seo.title,
+    title: post.seo.title.includes('Portora.id') ? { absolute: post.seo.title } : post.seo.title,
     description: post.seo.description,
     keywords: post.seo.keywords,
     openGraph: {

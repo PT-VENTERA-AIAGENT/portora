@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+export const metadata = { title: 'Pricing' }
+
 export default function PricingPage() {
   const plans = [
     {
@@ -9,7 +11,7 @@ export default function PricingPage() {
       desc: "Untuk recruiter yang baru mulai eksplorasi.",
       features: ["5 pencarian per bulan", "Lihat profil basic", "1 shortlist", "Email support"],
       cta: "Mulai gratis",
-      href: "/discover",
+      href: "/register?role=recruiter",
       highlight: false,
     },
     {
@@ -19,7 +21,7 @@ export default function PricingPage() {
       desc: "Untuk tim HR yang aktif rekrut creative talent.",
       features: ["Pencarian tak terbatas", "AI fit scoring", "Shortlist tak terbatas", "Portfolio full preview", "Priority support", "Export kandidat (CSV)"],
       cta: "Mulai trial 14 hari",
-      href: "/discover",
+      href: "/register?role=recruiter",
       highlight: true,
     },
     {
