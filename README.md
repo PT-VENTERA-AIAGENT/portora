@@ -42,8 +42,10 @@ npm run dev
 ```
 
 > ⚠️ **Shared Supabase project.** Portora shares a Supabase project with TalentRank, so Portora tables are prefixed
-> `portora_` (exception: `blog_posts` from `0002`; if TalentRank ever has its own `blog_posts`, `create table if not exists`
-> silently reuses it). On the shared project apply migrations with the SQL editor, not `supabase db push`.
+> `portora_` (exception: `blog_posts` from `0002`; check that TalentRank has no `blog_posts` table before applying it,
+> otherwise `0002` either fails or writes its seed posts and policy into TalentRank's table). On the shared project
+> apply migrations with the SQL editor, not `supabase db push`, and run `supabase link` yourself (the link state in
+> `supabase/.temp/` is not committed).
 > `supabase/legacy/001_portora_schema.sql` is kept for history only: it creates a generic `public.profiles` table and
 > replaces the `on_auth_user_created` trigger on `auth.users`, which can break TalentRank signups. The app only uses
 > the `portora_*` tables from `0003_portora_core.sql`.

@@ -2,12 +2,17 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Notifikasi email via Resend (opsional). Tanpa RESEND_API_KEY / EMAIL_FROM, email dilewati.
+// EMAIL_API_URL hanya untuk server lokal (mock). Nilai lain mematikan email, bukan jatuh ke Resend asli,
+// supaya salah ketik saat development tidak mengirim email sungguhan.
 const LOCAL_OVERRIDE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
-const API_URL = LOCAL_OVERRIDE.test(process.env.EMAIL_API_URL ?? '') ? process.env.EMAIL_API_URL! : 'https://api.resend.com'
+const override = process.env.EMAIL_API_URL?.replace(/\/+$/, '')
+const overrideOk = !override || LOCAL_OVERRIDE.test(override)
+if (!overrideOk) console.warn('[email] EMAIL_API_URL ditolak (hanya http://localhost atau 127.0.0.1); email dinonaktifkan')
+const API_URL = override && overrideOk ? override : 'https://api.resend.com'
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export function emailEnabled() {
-  return !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM
+  return overrideOk && !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)

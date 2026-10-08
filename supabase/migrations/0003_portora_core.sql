@@ -394,6 +394,8 @@ do $$ begin
   if to_regclass('public.portora_leads') is not null then
     drop policy if exists "portora admin read leads" on portora_leads;
     create policy "portora admin read leads" on portora_leads for select using (portora_is_admin());
+  else
+    raise notice 'portora_leads belum ada; jalankan ulang blok ini setelah 0002_blog_and_leads.sql.';
   end if;
 end $$;
 drop policy if exists "Anyone can insert leads" on portora_recruiter_leads;
