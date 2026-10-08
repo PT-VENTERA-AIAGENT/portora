@@ -41,93 +41,147 @@ npm run dev
 # → http://localhost:3000
 ```
 
+> ⚠️ **Shared Supabase project.** Portora shares a Supabase project with TalentRank, so every Portora table is prefixed `portora_`.
+> Do **not** run `supabase/migrations/001_portora_schema.sql` on the shared project: it creates a generic `public.profiles`
+> table and replaces the `on_auth_user_created` trigger on `auth.users`, which can collide with TalentRank. The app code
+> only uses the `portora_*` tables from `0003_portora_core.sql`.
+
+## Go-live checklist
+
+**Database (Supabase project owner)**
+- [ ] Run `supabase/migrations/0003_portora_core.sql` on the production project (SQL editor or `supabase db push`). Do **not** run `001_portora_schema.sql` on the shared TalentRank project.
+- [ ] Add at least one admin: `insert into portora_admins (user_id) select id from auth.users where email = '...';`
+
+**Supabase Auth settings**
+- [ ] Site URL = production domain; add `https://<domain>/auth/callback` to Redirect URLs.
+- [ ] Google provider (client ID/secret) if "Lanjut dengan Google" stays enabled.
+- [ ] Custom SMTP (e.g. Resend SMTP). The built-in Supabase mailer is rate-limited and not meant for production; confirmation and reset-password emails depend on it.
+
+**Environment variables (hosting, e.g. Vercel)**
+- [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server only; needed for account deletion and email lookups)
+- [ ] `NEXT_PUBLIC_SITE_URL` = `https://<domain>` (canonical URLs, sitemap, email links)
+- [ ] `RESEND_API_KEY` + `EMAIL_FROM` on a domain verified in Resend (invite / accepted / review emails)
+- [ ] `ANTHROPIC_API_KEY` with active credits (AI summary; optional)
+- [ ] `NEXT_PUBLIC_SUPPORT_EMAIL` (shown on Privacy & Terms)
+- [ ] Do **not** set `EMAIL_API_URL` in production (local demo only).
+
+**Content & legal**
+- [ ] Legal review of `/privacy` and `/terms`.
+- [ ] Confirm or remove unverified marketing claims (landing "Dipercaya 180+ perusahaan" and logo strip, for-recruiters stats, for-talent counts, "AI fit scoring" announcement) and seeded blog statistics.
+
+**After deploy**
+- [ ] Smoke test: register talent → admin approve → recruiter invite → accept → WhatsApp visible; forgot password email arrives.
+- [ ] Submit `https://<domain>/sitemap.xml` in Google Search Console.
+
+## Product flow
+
+```
+Talent:     /register?role=talent → /onboarding (5 steps) → status "pending"
+            → admin approves in /admin → listed in /discover
+            → /dashboard: accept/decline invites, manage work samples, toggle open-to-work
+Recruiter:  /register?role=recruiter → /company (company profile, 14-day Growth trial)
+            → /discover (filters, fit score) → save to /shortlists → send invite
+            → talent accepts → WhatsApp/email unlocked on the profile and in /invites
+Admin:      /admin → moderation, featured, AI summary, recruiter plans, leads, audit log
+```
+
+Google sign-ups without a role land on `/welcome` to pick talent or recruiter.
+
+## Plans (from /pricing)
+
+| Feature              | Starter (free) | Growth / Enterprise |
+| -------------------- | -------------- | ------------------- |
+| Text searches        | 5 / month      | Unlimited           |
+| Shortlists           | 1              | Unlimited           |
+| Fit score            | —              | ✓                   |
+| Work-sample preview  | 3 items        | All                 |
+| Export (CSV)         | —              | ✓                   |
+
+New recruiters get a 14-day Growth trial. There is no payment gateway yet: "upgrade" creates an `upgrade-request`
+lead and an admin activates the plan from the **Recruiter** tab in `/admin`.
+
+## Admin
+
+Admins are listed in `portora_admins`:
+
+```sql
+insert into portora_admins (user_id) select id from auth.users where email = 'admin@example.com';
+```
+
+## Email notifications (optional)
+
+With `RESEND_API_KEY` and `EMAIL_FROM` set, the app emails talents about new invites and review results, and
+recruiters when an invite is accepted. Without them, notifications are skipped. Auth emails (confirmation, reset
+password) are sent by Supabase Auth, not by the app.
+
+## AI summary (optional)
+
+Set `ANTHROPIC_API_KEY` in `.env.local`. A Claude-generated summary is created when an admin approves a profile
+(or via "Buat ringkasan AI" in the Talent tab) and is shown to recruiters. Without a key the feature is off and
+everything else keeps working.
+
 ## Storage buckets
 
-Create these via Supabase Dashboard → Storage (or CLI):
+Created by `0003_portora_core.sql`; files live under a `<user id>/` folder:
 
-| Bucket          | Visibility | Used for                        |
-| --------------- | ---------- | ------------------------------- |
-| `avatars`       | Public     | Candidate profile photos        |
-| `portfolio`     | Public     | Portfolio item media            |
-| `company-logos` | Public     | Recruiter company logos         |
-
----
+| Bucket              | Visibility | Used for                    |
+| ------------------- | ---------- | --------------------------- |
+| `portora-avatars`   | Public     | Talent profile photos (2 MB) |
+| `portora-portfolio` | Public     | Work-sample images (5 MB)   |
 
 ## Project structure
 
 ```
-web/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx             # Root layout + fonts (Inter, Fraunces, JetBrains Mono)
-│   │   ├── page.tsx               # Landing page (/)
-│   │   ├── globals.css            # Tailwind + corporate theme tokens
-│   │   ├── (marketing)/           # Public marketing pages
-│   │   │   ├── for-recruiters/
-│   │   │   ├── for-talent/
-│   │   │   └── pricing/
-│   │   ├── (app)/                 # Authenticated app
-│   │   │   ├── discover/          # Recruiter candidate search
-│   │   │   ├── talent/[slug]/     # Public talent profile
-│   │   │   ├── shortlists/
-│   │   │   ├── dashboard/         # Candidate dashboard
-│   │   │   └── onboarding/        # 5-step candidate onboarding
-│   │   ├── (auth)/                # Login / signup
-│   │   └── admin/                 # Admin moderation panel
-│   ├── components/
-│   │   ├── ui/                    # shadcn/ui primitives (button, card, input…)
-│   │   ├── brand/                 # Logo, nav, footer
-│   │   └── candidate/             # CandidateCard, FitScoreBreakdown
-│   └── lib/
-│       ├── supabase/              # client.ts, server.ts, middleware.ts, database.types.ts
-│       └── utils.ts               # cn(), formatRp(), slugify(), timeAgoId()
-├── supabase/
-│   └── migrations/
-│       └── 0001_initial_schema.sql   # All tables + RLS + triggers
-├── middleware.ts                  # Auth session refresh + route protection
-├── tailwind.config.ts             # Corporate theme (navy, amber, accent)
-├── components.json                # shadcn/ui config
-└── package.json
+src/
+├── middleware.ts                  # Auth + role guard (must live in src/, next to app/)
+├── app/
+│   ├── page.tsx                   # Landing
+│   ├── login/, register/, welcome/ # Auth + role picker
+│   ├── auth/callback, auth/logout
+│   ├── (marketing)/               # for-recruiters, for-talent, pricing, blog
+│   ├── (app)/
+│   │   ├── discover/              # Recruiter search + filters + fit score
+│   │   ├── talent/[username]/     # Public talent profile
+│   │   ├── shortlists/, invites/, company/   # Recruiter
+│   │   ├── onboarding/, dashboard/            # Talent
+│   │   └── admin/                 # Moderation, plans, leads, log
+│   └── actions/                   # Server actions: talent, recruiter, admin, account
+├── components/portora/            # Avatar, work tile, fit score, profile form, invite dialog
+└── lib/
+    ├── portora/                   # constants, plan, fit-score, validation, session, upload, ai-summary
+    └── supabase/                  # client.ts, server.ts, types.ts
+supabase/migrations/0003_portora_core.sql   # All portora_* tables + RLS + triggers + storage
 ```
 
 ## Database schema
 
-See `supabase/migrations/0001_initial_schema.sql`. Tables map to PRD §16:
+`supabase/migrations/0003_portora_core.sql` (idempotent):
 
-- `users` — mirrors `auth.users` with role (candidate / recruiter / admin)
-- `candidate_profiles` + `candidate_skills` / `_tools` / `_industries`
-- `portfolio_items` — with AI embedding column for semantic search
-- `recruiter_profiles` — subscription tier tracked here
-- `saved_candidates`, `shortlists`, `shortlist_items`
-- `fit_scores` — AI-generated per role template
-- `invites` — outreach tracking
-- `moderation_logs` — admin audit trail
+- `portora_talent_profiles`: profile + moderation status (`pending`/`approved`/`rejected`), featured, AI summary
+- `portora_talent_contacts`: WhatsApp/email, readable only by the owner, admins, and recruiters whose invite was accepted
+- `portora_portfolio_items`: work samples (image/video/link)
+- `portora_recruiter_profiles`: company profile + plan/trial + search quota
+- `portora_shortlists`: named shortlists per recruiter
+- `portora_invites`: recruiter → talent invites (`sent`/`accepted`/`declined`)
+- `portora_admins`, `portora_moderation_logs`
+- `portora_leads`, `portora_recruiter_leads`, `blog_posts` (earlier migrations)
 
-**RLS enabled on all tables.** Public can read approved candidate profiles; recruiters see full candidate DB when authenticated; candidates manage their own data; admins bypass via `current_user_role()`.
+Triggers protect moderation columns, plans, and invite answers from direct client writes.
 
-## Routing (from PRD §15)
+## Routing
 
-| URL                        | File                                             | Access            |
-| -------------------------- | ------------------------------------------------ | ----------------- |
-| `/`                        | `src/app/page.tsx`                               | Public            |
-| `/for-recruiters`          | `src/app/(marketing)/for-recruiters/page.tsx`    | Public            |
-| `/for-talent`              | `src/app/(marketing)/for-talent/page.tsx`        | Public            |
-| `/pricing`                 | `src/app/(marketing)/pricing/page.tsx`           | Public            |
-| `/login`, `/signup`        | `src/app/(auth)/…`                               | Public (redirects if logged in) |
-| `/discover`                | `src/app/(app)/discover/page.tsx`                | Recruiter only    |
-| `/talent/[slug]`           | `src/app/(app)/talent/[slug]/page.tsx`           | Public (approved profiles) |
-| `/shortlists`              | `src/app/(app)/shortlists/page.tsx`              | Recruiter only    |
-| `/dashboard`               | `src/app/(app)/dashboard/page.tsx`               | Candidate only    |
-| `/onboarding`              | `src/app/(app)/onboarding/page.tsx`              | Candidate only    |
-| `/admin`                   | `src/app/admin/page.tsx`                         | Admin only        |
-
-Route protection handled by `middleware.ts` → `src/lib/supabase/middleware.ts`.
-
-## Adding shadcn/ui components
-
-```bash
-npx shadcn@latest add dialog dropdown-menu tabs select popover
-```
+| URL                                                | Access                                         |
+| -------------------------------------------------- | ---------------------------------------------- |
+| `/`, `/for-*`, `/pricing`, `/blog`                 | Public                                         |
+| `/login`, `/register`                              | Public (signed-in users go to their home page) |
+| `/welcome`                                         | Signed in, no role yet                         |
+| `/talent/[username]`                               | Public for approved profiles; owner & admin can preview |
+| `/privacy`, `/terms`                               | Public                                         |
+| `/forgot-password`                                 | Public                                         |
+| `/reset-password`, `/account`                      | Signed in                                      |
+| `/discover`, `/shortlists`, `/invites`, `/company` | Recruiter                                      |
+| `/onboarding`, `/dashboard`, `/dashboard/profile`  | Talent                                         |
+| `/admin`                                           | Admin (`portora_admins`)                       |
 
 ## Design tokens
 
@@ -143,24 +197,6 @@ The corporate theme uses these brand tokens (in `globals.css`):
 | `--ink`     | `#0A0E1A`  | Body text                       |
 
 Use via Tailwind: `bg-navy`, `text-accent`, `border-line`, etc.
-
-## Available pages
-
-- ✅ **Landing** (`/`) — Hero, stats, features, CTA
-- ✅ **Discover** (`/discover`) — Candidate search with real Supabase query (+ demo fallback)
-- ✅ **Talent profile** (`/talent/[slug]`) — Portfolio, AI summary, fit score
-- ✅ **Onboarding** (`/onboarding`) — 5-step stepper (Step 3 implemented)
-
-## To be ported from `ui-corporate/`
-
-These static pages exist as HTML references in `../ui-corporate/` — port to Next.js as needed:
-
-- `for-talent.html` → `(marketing)/for-talent/page.tsx`
-- `for-recruiters.html` → `(marketing)/for-recruiters/page.tsx`
-- `pricing.html` → `(marketing)/pricing/page.tsx`
-- `shortlist.html` → `(app)/shortlists/page.tsx`
-- `dashboard.html` → `(app)/dashboard/page.tsx`
-- `admin.html` → `admin/page.tsx`
 
 ## Common tasks
 
